@@ -6,9 +6,10 @@ the program one argument (your preferred CA file base name), it generates a
 self-signed root certificate that you can install to become a locally trusted
 Certificate Authority.  If you give it a second argument, it generates a
 private key (in a file having that base name), and signs it using your local
-root.  The two-argument version implicitly creates the root cert automatically.
+root cert.  The two-argument version creates the root cert automatically if it
+does not already exist.
 
-This approach has been [best practice][].  This project was inspired by Daksh Shah's
+This approach is [best practice][].  This project was inspired by Daksh Shah's
 [local-cert-generator][], and by [this article][].  Caveat emptor:  I am not a
 security expert.
 
