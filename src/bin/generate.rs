@@ -1,7 +1,6 @@
 use std::env;
 use std::path::Path;
-use std::process;
-use std::process::Command;
+use std::process::{self, Command};
 
 fn openssl(args: &[&str]) -> Result<(), String> {
     match Command::new("openssl").args(args).status() {
