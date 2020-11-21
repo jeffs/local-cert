@@ -1,4 +1,5 @@
 use std::env;
+use std::path::Path;
 use std::process;
 use std::process::Command;
 
@@ -17,8 +18,8 @@ fn openssl(args: &[&str]) -> Result<(), String> {
 
 #[rustfmt::skip]
 fn generate_ca(name: &str) -> Result<(), String> {
-    let key = format!("{}.key", name);
-    let pem = format!("{}.pem", name);
+    let key = format!("{}.key", name);  // CA's keys
+    let pem = format!("{}.pem", name);  // self-signed certificate
     openssl(&[
         "genpkey",           // Generate a private key.
         "-out", &key,        // output file name
@@ -27,17 +28,49 @@ fn generate_ca(name: &str) -> Result<(), String> {
         "-aes-256-cbc",      // algorithm to encrypt the key
     ])?;
     openssl(&[
-        "req", "-new", "-x509", // Request a new X.509 certificate.
-        "-key", &key,           // public key to be signed (and private key to sign with)
-        "-sha256",              // message digest to sign the request
-        "-out", &pem,           // output file name
-        "-days", "7300",        // how long before the cert expires
+        "req", "-new",   // Request a new certificate.
+        "-x509",         // self-signed X.509 cert, not merely a CSR
+        "-key", &key,    // public key to be signed and private key to sign with
+        "-sha256",       // message digest to sign the request
+        "-out", &pem,    // output file name
+        "-days", "7300", // requested time before the cert expires
     ])
 }
 
-#[allow(unused_variables)]
+#[rustfmt::skip]
 fn generate_server(name: &str, ca_name: &str) -> Result<(), String> {
-    todo!()
+    let ca_key = format!("{}.key", ca_name); // CA key to sign the cert with
+    let ca_pem = format!("{}.pem", ca_name); // CA cert
+    let key = format!("{}.key", name);       // server private/public key
+    let cnf = "data/server.cnf";             // CSR field values
+    let ext = "data/v3.ext";                 // certificate extensions
+    let csr = format!("{}.csr", name);       // certificate signing request
+    let crt = format!("{}.crt", name);       // certificate
+    if !Path::new(&ca_pem).exists() {
+        generate_ca(ca_name)?
+    }
+    openssl(&[
+        "genpkey",           // Generate a private key.
+        "-out", &key,        // output file name
+        "-algorithm", "RSA", // algorithm to generate the key
+        "-aes-256-cbc",      // algorithm to encrypt the key
+    ])?;
+    openssl(&[
+        "req", "-new",   // Request a new certificate; i.e., generate a CSR.
+        "-out", &csr,    // output file name
+        "-key", &key,    // key to be signed
+        "-config", &cnf, // field values, like Common Name
+    ])?;
+    openssl(&[
+        "x509", "-req",    // Request an X.509 certificate.
+        "-in", &csr,       // input (CSR) file name
+        "-out", &crt,      // output (cert) file name
+        "-CA", &ca_pem,    // CA that should sign the cert
+        "-CAkey", &ca_key, // key to sign the cert with
+        "-CAcreateserial", // bump the serial number in a .srl file
+        "-days", "7300",   // actual time before the cert expires
+        "-extfile", &ext,  // optional extension data
+    ])
 }
 
 fn main() {
