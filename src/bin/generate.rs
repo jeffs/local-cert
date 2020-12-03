@@ -33,7 +33,7 @@ fn generate_ca(name: &str) -> Result<(), String> {
         "-key", &key,    // public key to be signed and private key to sign with
         "-sha256",       // message digest to sign the request
         "-out", &pem,    // output file name
-        "-days", "7300", // requested time before the cert expires
+        "-days", "720",  // requested time before the cert expires
     ])
 }
 
@@ -68,7 +68,7 @@ fn generate_server(name: &str, ca_name: &str) -> Result<(), String> {
         "-CA", &ca_pem,    // CA that should sign the cert
         "-CAkey", &ca_key, // key to sign the cert with
         "-CAcreateserial", // bump the serial number in a .srl file
-        "-days", "7300",   // actual time before the cert expires
+        "-days", "720",    // actual time before the cert expires
         "-extfile", &ext,  // optional extension data
     ])
 }
