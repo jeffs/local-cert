@@ -3,6 +3,7 @@ use std::path::Path;
 use std::process::{self, Command};
 
 fn openssl(args: &[&str]) -> Result<(), String> {
+    println!("calling openssl with args: {:#?}", args);
     match Command::new("openssl").args(args).status() {
         Ok(status) => {
             if status.success() {
